@@ -216,3 +216,40 @@ plt.savefig(f'temp/interpolation_{int(time.time())}.png')
 plt.show()
 
 
+import analysis
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn import decomposition
+import numpy as np
+
+sample_n = 85
+multiplyer = 10
+image_size = (128, 128)
+frequency_domin = False
+normlized = True
+components = 6
+
+ax = plt.subplot(1, 1, 1)
+X, _ = analysis.read_data("images",
+                          sample_n=sample_n,
+                          multiplyer=multiplyer,
+                          frequency_domin=frequency_domin,
+                          image_size=image_size,
+                          normlized=normlized)
+non_zero_count = np.count_nonzero(X, axis=0)
+X = X * 1/non_zero_count
+
+pca = decomposition.PCA(n_components=components)
+pc = pca.fit_transform(X)
+df = pd.DataFrame({'Variation %': pca.explained_variance_ratio_*100,
+             'PC':[f"PC{i+1}" for i in range(components)]})
+sns.barplot(x='PC',y="Variation %", data=df, color="g")
+plt.show()
+
+for i in range(components):
+    ax = plt.subplot(2,3,i+1)
+    plt.imshow(pca.components_[i].reshape(image_size), cmap="Greys")
+    ax.title.set_text(f"PC{i+1}")
+    plt.axis("off")
+plt.show()
